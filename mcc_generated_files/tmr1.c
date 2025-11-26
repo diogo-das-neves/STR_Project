@@ -71,14 +71,14 @@ void TMR1_Initialize(void)
     //GSS T1G_pin; 
     T1GATE = 0x00;
 
-    //CS FOSC/4; 
-    T1CLK = 0x01;
+    //CS LFINTOSC; 
+    T1CLK = 0x04;
 
-    //TMR1H 133; 
-    TMR1H = 0x85;
+    //TMR1H 240; 
+    TMR1H = 0xF0;
 
-    //TMR1L 238; 
-    TMR1L = 0xEE;
+    //TMR1L 221; 
+    TMR1L = 0xDD;
 
     // Clearing IF flag before enabling the interrupt.
     PIR4bits.TMR1IF = 0;
@@ -168,12 +168,19 @@ void TMR1_ISR(void)
     PIR4bits.TMR1IF = 0;
     TMR1_WriteTimer(timer1ReloadVal);
 
+    // ticker function call;
+    // ticker is 1 -> Callback function gets called everytime this ISR executes
+    TMR1_CallBack();
+}
+
+void TMR1_CallBack(void)
+{
+    // Add your custom callback code here
     if(TMR1_InterruptHandler)
     {
         TMR1_InterruptHandler();
     }
 }
-
 
 void TMR1_SetInterruptHandler(void (* InterruptHandler)(void)){
     TMR1_InterruptHandler = InterruptHandler;
