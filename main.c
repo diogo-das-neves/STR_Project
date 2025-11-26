@@ -42,10 +42,11 @@
 */
 
 #include "mcc_generated_files/mcc.h"
-
-t1_isr()
+int seconds;
+void t1_isr()
 {
-    IO_RA7_Toggle();
+    seconds++;
+    D2_Toggle();
 }
 /*
                          Main application
@@ -71,7 +72,7 @@ void main(void)
     //INTERRUPT_PeripheralInterruptDisable();
 
     TMR1_SetInterruptHandler(t1_isr);
-    IO_RA7_SetHigh();
+    D2_SetHigh();
     while (1)
     {
         // Add your application code
