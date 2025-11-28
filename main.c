@@ -73,8 +73,29 @@ void main(void)
 
     TMR1_SetInterruptHandler(t1_isr);
     D2_SetHigh();
+    
+    POT_SetAnalogMode();
+    POT_SetDigitalInput();
+    adc_result_t convertedValue;
+    ADCC_Initialize();
+    ADCC_DisableContinuousConversion();
+    
+    
     while (1)
     {
+        convertedValue = ADCC_GetSingleConversion(POT);
+        if (convertedValue < 256) {
+            
+        }
+        else if (convertedValue < 512) {
+
+        }
+        else if (convertedValue < 768) {
+
+        }
+        else {
+
+        }
         // Add your application code
         NOP();
     }
