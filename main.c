@@ -42,6 +42,41 @@
 */
 
 #include "mcc_generated_files/mcc.h"
+#include "I2C/i2c.h"
+#include "extra.h"
+#include "LCD/lcd.h"
+#include "stdio.h"
+
+unsigned char readTC74 (void)
+{
+	unsigned char value;
+do{
+	IdleI2C();
+	StartI2C(); IdleI2C();
+    
+	WriteI2C(0x9a | 0x00); IdleI2C();
+	WriteI2C(0x01); IdleI2C();
+	RestartI2C(); IdleI2C();
+	WriteI2C(0x9a | 0x01); IdleI2C();
+	value = ReadI2C(); IdleI2C();
+	NotAckI2C(); IdleI2C();
+	StopI2C();
+} while (!(value & 0x40));
+
+	IdleI2C();
+	StartI2C(); IdleI2C();
+	WriteI2C(0x9a | 0x00); IdleI2C();
+	WriteI2C(0x00); IdleI2C();
+	RestartI2C(); IdleI2C();
+	WriteI2C(0x9a | 0x01); IdleI2C();
+	value = ReadI2C(); IdleI2C();
+	NotAckI2C(); IdleI2C();
+	StopI2C();
+
+	return value;
+}
+
+
 int seconds;
 void t1_isr()
 {
@@ -53,6 +88,8 @@ void t1_isr()
  */
 void main(void)
 {
+    unsigned char c;
+    char buf[17];
     // initialize the device
     SYSTEM_Initialize();
 
@@ -70,6 +107,13 @@ void main(void)
 
     // Disable the Peripheral Interrupts
     //INTERRUPT_PeripheralInterruptDisable();
+    State state = normal;
+    
+    
+    
+    // LCD and I2C start
+    OpenI2C();
+    LCDinit();
 
     TMR1_SetInterruptHandler(t1_isr);
     D2_SetHigh();
@@ -98,6 +142,36 @@ void main(void)
         }
         // Add your application code
         NOP();
+
+        // 1. Input handling / non periodic tasks
+        
+        // 2. Get updated values and sutff / periodic tasks
+        
+        // 3. Screen info, updated after each cycle
+        switch(state){
+            case normal:
+                // print normal display and values?
+                break;
+            case config:
+                //print the config stuff
+                break;
+            case records:
+                // access the register that store the values?
+                break;
+        }
+        
+        c = readTC74();
+        LCDcmd(0x80);       //first line, first column
+        while (LCDbusy());
+        LCDstr("Temp");
+        LCDpos(0,8);
+        while (LCDbusy());
+        LCDstr("STR-RTS");
+        LCDcmd(0xc0);       // second line, first column
+        sprintf(buf, "%02d C", c);
+        while (LCDbusy());
+        LCDstr(buf);
+        __delay_ms(2000);
     }
 }
 /**

@@ -24,6 +24,7 @@
 /nbproject/*.bash
 /nbproject/Makefile-genesis.properties
 /nbproject/queuelogs/
+/mcc-manifest-autosave.yml
 
 # MCC specific
 *mc3.bak*
