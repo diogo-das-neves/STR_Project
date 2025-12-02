@@ -77,7 +77,9 @@ do{
 }
 
 
-int seconds;
+uint8_t seconds = 0;
+uint8_t minutes = 0;
+uint8_t hours   = 0;
 void t1_isr()
 {
     seconds++;
@@ -86,6 +88,8 @@ void t1_isr()
 /*
                          Main application
  */
+volatile uint8_t flag_read_sensors = 1;
+
 void main(void)
 {
     unsigned char c;
@@ -118,28 +122,63 @@ void main(void)
     TMR1_SetInterruptHandler(t1_isr);
     D2_SetHigh();
     
-    POT_SetAnalogMode();
-    POT_SetDigitalInput();
-    adc_result_t convertedValue;
     ADCC_Initialize();
     ADCC_DisableContinuousConversion();
     
     
+    int minLum = 1023;
+    int maxLum = 0;
+    int minTemp = 255;
+    int maxTemp = 0;
+
+    uint8_t newLum;
+    adc_result_t lum;
+    uint8_t temp;
+
     while (1)
     {
-        convertedValue = ADCC_GetSingleConversion(POT);
-        if (convertedValue < 256) {
-            
-        }
-        else if (convertedValue < 512) {
+        if(flag_read_sensors == 1){
+            flag_read_sensors = 0;
+            lum = ADCC_GetSingleConversion(0x0);
+            temp = readTC74();
 
-        }
-        else if (convertedValue < 768) {
+        
 
-        }
-        else {
+            newLum = (lum * 255) / 1023;
 
+            if(lum < minLum){
+                minLum = lum;
+                DATAEE_WriteByte(MINLUM,   hours);
+                DATAEE_WriteByte(MINLUM+1, minutes);
+                DATAEE_WriteByte(MINLUM+2, seconds);
+                DATAEE_WriteByte(MINLUM+3, newLum);
+                DATAEE_WriteByte(MINLUM+4, temp);
+            }
+            if(lum > maxLum){
+                maxLum = lum;
+                DATAEE_WriteByte(MAXLUM,   hours);
+                DATAEE_WriteByte(MAXLUM+1, minutes);
+                DATAEE_WriteByte(MAXLUM+2, seconds);
+                DATAEE_WriteByte(MAXLUM+3, newLum);
+                DATAEE_WriteByte(MAXLUM+4, temp);
+            }
+
+            if(temp < minTemp){
+                minTemp = temp;
+                DATAEE_WriteByte(MINTEMP,   hours);
+                DATAEE_WriteByte(MINTEMP+1, minutes);
+                DATAEE_WriteByte(MINTEMP+2, seconds);
+                DATAEE_WriteByte(MINTEMP+3, temp);
+            }
+            if(temp > maxTemp){
+                maxTemp = temp;
+                DATAEE_WriteByte(MAXTEMP,   hours);
+                DATAEE_WriteByte(MAXTEMP+1, minutes);
+                DATAEE_WriteByte(MAXTEMP+2, seconds);
+                DATAEE_WriteByte(MAXTEMP+3, temp);
+            }
         }
+    }
         // Add your application code
         NOP();
 
