@@ -47,6 +47,11 @@
 #include "LCD/lcd.h"
 #include "stdio.h"
 
+#define MINLUM  0x00
+#define MAXLUM  0x05
+#define MINTEMP 0x0A
+#define MAXTEMP 0x14
+
 unsigned char readTC74 (void)
 {
 	unsigned char value;
@@ -83,7 +88,18 @@ uint8_t hours   = 0;
 void t1_isr()
 {
     seconds++;
-    D2_Toggle();
+    if(seconds >= 60){
+        seconds = 0;
+        minutes++;
+    }
+    if(minutes >= 60){
+        minutes = 0;
+        hours++;
+    }
+    
+    if(seconds == 0 || seconds % 5 == 0){
+        flag_read_sensors = 1;
+    }
 }
 /*
                          Main application
@@ -216,3 +232,4 @@ void main(void)
 /**
  End of File
 */
+
